@@ -168,7 +168,7 @@ router.get('/', authenticate, userController.getAllUsers);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/:id', authenticate, userController.getUserById);
+router.get('/:id', authenticate, hasPermission('READ_USER'), userController.getUserById);
 
 /**
  * @swagger
@@ -230,7 +230,7 @@ router.get('/:id', authenticate, userController.getUserById);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/:id', authenticate, updateUserValidation, userController.updateUser);
+router.put('/:id', authenticate, hasPermission('UPDATE_USER'), updateUserValidation, userController.updateUser);
 
 /**
  * @swagger
@@ -284,7 +284,7 @@ router.put('/:id', authenticate, updateUserValidation, userController.updateUser
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete('/:id', authenticate, userController.deactivateUser);
+router.delete('/:id', authenticate, hasPermission('DELETE_USER'), userController.deactivateUser);
 
 /**
  * @swagger

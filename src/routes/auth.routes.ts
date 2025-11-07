@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
 import { authenticate } from '../middlewares/auth.middleware';
-import { body } from 'express-validator';
+import { body, validationResult } from 'express-validator';
 
 const router = Router();
 const authController = new AuthController();
@@ -11,12 +11,26 @@ const registerValidation = [
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
   body('firstName').optional().isString().withMessage('First name must be a string'),
-  body('lastName').optional().isString().withMessage('Last name must be a string')
+  body('lastName').optional().isString().withMessage('Last name must be a string'),
+  (req: any, res: any, next: any) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: errors.array()[0].msg });
+    }
+    next();
+  }
 ];
 
 const loginValidation = [
   body('email').isEmail().withMessage('Please provide a valid email'),
-  body('password').notEmpty().withMessage('Password is required')
+  body('password').notEmpty().withMessage('Password is required'),
+  (req: any, res: any, next: any) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: errors.array()[0].msg });
+    }
+    next();
+  }
 ];
 
 /**

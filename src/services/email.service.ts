@@ -1,26 +1,69 @@
 import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+
+// Ensure environment variables are loaded
+dotenv.config();
 
 class EmailService {
   private transporter;
+  private isConfigured: boolean = false;
 
   constructor() {
+    const emailPassword = process.env.EMAIL_PASSWORD;
+    const emailUser = process.env.EMAIL_USER || 'haris.qadir93@gmail.com';
+    
+    // Validate email configuration
+    if (!emailPassword) {
+      console.warn('⚠️  WARNING: EMAIL_PASSWORD environment variable is not set. Email sending will fail.');
+      this.isConfigured = false;
+    } else {
+      this.isConfigured = true;
+    }
+
     this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT || '587'),
       secure: false,
       auth: {
-        user: 'haris.qadir93@gmail.com',
-        pass: process.env.EMAIL_PASSWORD || ''
+        user: emailUser,
+        pass: emailPassword || ''
       }
     });
+
+    // Verify connection on startup
+    if (this.isConfigured) {
+      this.verifyConnection().catch(err => {
+        console.error('❌ Email service connection verification failed:', err.message);
+      });
+    }
+  }
+
+  private async verifyConnection(): Promise<void> {
+    try {
+      await this.transporter.verify();
+      console.log('✅ Email service configured and ready');
+    } catch (error: any) {
+      console.error('❌ Email service verification failed:', error.message);
+      if (error.code === 'EAUTH') {
+        console.error('   → Check your EMAIL_PASSWORD. For Gmail, use an App-Specific Password.');
+      }
+      throw error;
+    }
   }
 
   async sendPasswordSetupEmail(email: string, name: string, token: string) {
+    if (!this.isConfigured) {
+      const error = new Error('Email service is not configured. Please set EMAIL_PASSWORD environment variable.');
+      console.error('❌ Email sending failed:', error.message);
+      throw error;
+    }
+
     const appUrl = process.env.APP_URL || 'http://localhost:3000';
     const setupLink = `${appUrl}/set-password?token=${token}`;
+    const emailFrom = process.env.EMAIL_USER || 'haris.qadir93@gmail.com';
 
     const mailOptions = {
-      from: 'haris.qadir93@gmail.com',
+      from: `"Auth Server" <${emailFrom}>`,
       to: email,
       subject: 'Set Your Password - Auth Server',
       html: `
@@ -45,17 +88,29 @@ class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('Email sent:', info.messageId);
+      console.log('✅ Password setup email sent successfully:', info.messageId, `→ ${email}`);
       return true;
-    } catch (error) {
-      console.error('Error sending email:', error);
+    } catch (error: any) {
+      console.error('❌ Error sending password setup email:', error.message);
+      if (error.code === 'EAUTH') {
+        console.error('   → Authentication failed. Check EMAIL_PASSWORD. For Gmail, use App-Specific Password.');
+      } else if (error.code === 'ECONNECTION') {
+        console.error('   → Connection failed. Check network and SMTP settings.');
+      }
       throw error;
     }
   }
 
   async sendWelcomeEmail(email: string, name: string) {
+    if (!this.isConfigured) {
+      const error = new Error('Email service is not configured. Please set EMAIL_PASSWORD environment variable.');
+      console.error('❌ Email sending failed:', error.message);
+      throw error;
+    }
+
+    const emailFrom = process.env.EMAIL_USER || 'haris.qadir93@gmail.com';
     const mailOptions = {
-      from: 'haris.qadir93@gmail.com',
+      from: `"Auth Server" <${emailFrom}>`,
       to: email,
       subject: 'Welcome to Auth Server!',
       html: `
@@ -70,10 +125,15 @@ class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('Welcome email sent:', info.messageId);
+      console.log('✅ Welcome email sent successfully:', info.messageId, `→ ${email}`);
       return true;
-    } catch (error) {
-      console.error('Error sending welcome email:', error);
+    } catch (error: any) {
+      console.error('❌ Error sending welcome email:', error.message);
+      if (error.code === 'EAUTH') {
+        console.error('   → Authentication failed. Check EMAIL_PASSWORD. For Gmail, use App-Specific Password.');
+      } else if (error.code === 'ECONNECTION') {
+        console.error('   → Connection failed. Check network and SMTP settings.');
+      }
       throw error;
     }
   }

@@ -11,7 +11,7 @@ model User {
   id            String     @id @default(uuid())
   username      String
   email         String     @unique
-  password_hash String
+  password_hash String     @map("password_hash")
   is_active     Boolean    @default(true)  @map("is_active")
   created_at    DateTime   @default(now())  @map("created_at")
   updated_at    DateTime   @updatedAt  @map("updated_at")
@@ -63,4 +63,45 @@ model RolePermission {
   role          Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
 
   @@map("role_permissions")
+}
+
+model Project {
+  id                  Int       @id @default(autoincrement())
+  project_id          String    @unique @map("project_id")
+  project_name        String    @map("project_name")
+  description         String?   @db.Text
+  start_date          DateTime? @db.Date @map("start_date")
+  end_date            DateTime? @db.Date @map("end_date")
+  priority            String?    @db.VarChar(50)
+  status              String?    @db.VarChar(50)
+  budget              Decimal?  @db.Decimal(10, 2)
+  client_name         String?   @map("client_name")
+  project_manager     String?   @map("project_manager")
+  created_at          DateTime  @default(now()) @map("created_at")
+  updated_at          DateTime  @updatedAt @map("updated_at")
+  completion_percentage Int?    @default(0) @map("completion_percentage")
+  tasks               Task[]
+
+  @@map("projects")
+}
+
+model Task {
+  id              Int       @id @default(autoincrement())
+  task_id         String    @unique @map("task_id")
+  project_id      String?   @map("project_id")
+  task_name       String    @map("task_name")
+  description     String?   @db.Text
+  assigned_to     String?   @map("assigned_to")
+  priority        String?   @db.VarChar(50)
+  status          String?   @db.VarChar(50)
+  due_date        DateTime? @db.Date @map("due_date")
+  estimated_hours Decimal?  @db.Decimal(5, 2) @map("estimated_hours")
+  actual_hours    Decimal?  @default(0) @db.Decimal(5, 2) @map("actual_hours")
+  tags             String?   @db.Text
+  created_at       DateTime  @default(now()) @map("created_at")
+  updated_at       DateTime  @updatedAt @map("updated_at")
+  completed_at     DateTime? @map("completed_at")
+  project          Project?  @relation(fields: [project_id], references: [project_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("tasks")
 }
