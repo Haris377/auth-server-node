@@ -121,6 +121,61 @@ router.get('/user/:email', authenticate, taskController.getTasksByUserEmail);
 
 /**
  * @swagger
+ * /api/tasks/get-tasks:
+ *   get:
+ *     summary: Get all tasks with detailed statistics (optionally filtered by project)
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: project_id
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Optional project ID to filter tasks
+ *     responses:
+ *       200:
+ *         description: Tasks retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 project_id:
+ *                   type: string
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     total_tasks:
+ *                       type: integer
+ *                     completed_tasks:
+ *                       type: integer
+ *                     overdue_tasks:
+ *                       type: integer
+ *                     high_priority_tasks:
+ *                       type: integer
+ *                     total_estimated_hours:
+ *                       type: number
+ *                     total_actual_hours:
+ *                       type: number
+ *                 tasks:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Bad request - project_id parameter missing
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/get-tasks', authenticate, taskController.getAllTasks);
+
+/**
+ * @swagger
  * /api/tasks/{id}:
  *   get:
  *     summary: Get task by ID
@@ -273,6 +328,7 @@ router.put('/:id', authenticate, taskController.updateTask);
  *         description: Internal server error
  */
 router.delete('/:id', authenticate, taskController.deleteTask);
+
 
 export default router;
 

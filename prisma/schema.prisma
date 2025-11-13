@@ -9,13 +9,16 @@ datasource db {
 
 model User {
   id            String     @id @default(uuid())
-  username      String
+  username      String     @unique
   email         String     @unique
   password_hash String     @map("password_hash")
   is_active     Boolean    @default(true)  @map("is_active")
+  phone         String?
+  department_id Int?
   created_at    DateTime   @default(now())  @map("created_at")
   updated_at    DateTime   @updatedAt  @map("updated_at")
   roles         UserRole[]
+  department    Department? @relation(fields: [department_id], references: [id])
 
   @@map("users")
 }
@@ -104,4 +107,15 @@ model Task {
   project          Project?  @relation(fields: [project_id], references: [project_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("tasks")
+}
+
+model Department {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  created_at  DateTime  @default(now()) @map("created_at")
+  updated_at  DateTime  @updatedAt @map("updated_at")
+  users       User[]
+
+  @@map("departments")
 }

@@ -9,32 +9,46 @@ class EmailService {
   private isConfigured: boolean = false;
 
   constructor() {
-    const emailPassword = process.env.EMAIL_PASSWORD;
-    const emailUser = process.env.EMAIL_USER || 'haris.qadir93@gmail.com';
+    // Use the specific email configuration
+    const emailConfig = {
+      emailaddressFrom: "contact@cyful.net",
+      emailaddress: "contact@cyful.net",
+      password: "]H6G4R;35Jo",
+      localport: "587",
+      localSMTPIP: "smtp.hostinger.com",
+      SenderEmailAddress: "contact@cyful.net",
+      SMTPIP: "smtp.hostinger.com",
+      SMTPPort: 587,
+      EnableSSL: true,
+      AllowAnonymous: false
+    };
     
-    // Validate email configuration
-    if (!emailPassword) {
-      console.warn('⚠️  WARNING: EMAIL_PASSWORD environment variable is not set. Email sending will fail.');
-      this.isConfigured = false;
-    } else {
-      this.isConfigured = true;
-    }
+    // Set configuration status
+    this.isConfigured = true;
 
     this.transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT || '587'),
-      secure: false,
+      host: emailConfig.SMTPIP,
+      port: emailConfig.SMTPPort,
+      secure: emailConfig.EnableSSL,
       auth: {
-        user: emailUser,
-        pass: emailPassword || ''
+        user: emailConfig.emailaddress,
+        pass: emailConfig.password
       }
     });
 
     // Verify connection on startup
     if (this.isConfigured) {
-      this.verifyConnection().catch(err => {
-        console.error('❌ Email service connection verification failed:', err.message);
-      });
+      this.verifyConnection()
+        .then(() => {
+          // Connection success log is inside verifyConnection()
+        })
+        .catch((err: any) => {
+          if (err && err.message) {
+            console.error('❌ Email service connection verification failed:', err.message);
+          } else {
+            console.error('❌ Email service connection verification failed:', err);
+          }
+        });
     }
   }
 
@@ -45,7 +59,7 @@ class EmailService {
     } catch (error: any) {
       console.error('❌ Email service verification failed:', error.message);
       if (error.code === 'EAUTH') {
-        console.error('   → Check your EMAIL_PASSWORD. For Gmail, use an App-Specific Password.');
+        console.error('   → Authentication failed. Check your email credentials for smtp.hostinger.com.');
       }
       throw error;
     }
@@ -53,14 +67,14 @@ class EmailService {
 
   async sendPasswordSetupEmail(email: string, name: string, token: string) {
     if (!this.isConfigured) {
-      const error = new Error('Email service is not configured. Please set EMAIL_PASSWORD environment variable.');
+      const error = new Error('Email service is not configured properly.');
       console.error('❌ Email sending failed:', error.message);
       throw error;
     }
 
     const appUrl = process.env.APP_URL || 'http://localhost:3000';
     const setupLink = `${appUrl}/set-password?token=${token}`;
-    const emailFrom = process.env.EMAIL_USER || 'haris.qadir93@gmail.com';
+    const emailFrom = 'contact@cyful.net';
 
     const mailOptions = {
       from: `"Auth Server" <${emailFrom}>`,
@@ -93,9 +107,9 @@ class EmailService {
     } catch (error: any) {
       console.error('❌ Error sending password setup email:', error.message);
       if (error.code === 'EAUTH') {
-        console.error('   → Authentication failed. Check EMAIL_PASSWORD. For Gmail, use App-Specific Password.');
+        console.error('   → Authentication failed. Check email credentials for smtp.hostinger.com.');
       } else if (error.code === 'ECONNECTION') {
-        console.error('   → Connection failed. Check network and SMTP settings.');
+        console.error('   → Connection failed. Check network and SMTP settings for smtp.hostinger.com.');
       }
       throw error;
     }
@@ -103,12 +117,12 @@ class EmailService {
 
   async sendWelcomeEmail(email: string, name: string) {
     if (!this.isConfigured) {
-      const error = new Error('Email service is not configured. Please set EMAIL_PASSWORD environment variable.');
+      const error = new Error('Email service is not configured properly.');
       console.error('❌ Email sending failed:', error.message);
       throw error;
     }
 
-    const emailFrom = process.env.EMAIL_USER || 'haris.qadir93@gmail.com';
+    const emailFrom = 'contact@cyful.net';
     const mailOptions = {
       from: `"Auth Server" <${emailFrom}>`,
       to: email,
@@ -130,9 +144,9 @@ class EmailService {
     } catch (error: any) {
       console.error('❌ Error sending welcome email:', error.message);
       if (error.code === 'EAUTH') {
-        console.error('   → Authentication failed. Check EMAIL_PASSWORD. For Gmail, use App-Specific Password.');
+        console.error('   → Authentication failed. Check email credentials for smtp.hostinger.com.');
       } else if (error.code === 'ECONNECTION') {
-        console.error('   → Connection failed. Check network and SMTP settings.');
+        console.error('   → Connection failed. Check network and SMTP settings for smtp.hostinger.com.');
       }
       throw error;
     }

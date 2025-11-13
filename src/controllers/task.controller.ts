@@ -135,5 +135,35 @@ export class TaskController {
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
+
+  async getAllTasks(req: Request, res: Response) {
+    try {
+      console.log('GET /api/tasks/get-tasks called');
+      console.log('Query params:', req.query);
+      
+      const { project_id } = req.query;
+      
+      // Project ID is optional
+      const projectId = project_id && typeof project_id === 'string' ? project_id : undefined;
+      
+      if (projectId) {
+        console.log('Fetching tasks for project ID:', projectId);
+      } else {
+        console.log('Fetching all tasks');
+      }
+      
+      const result = await taskService.getAllTasks(projectId);
+      console.log('Tasks found:', result.tasks.length);
+      
+      return res.status(200).json(result);
+    } catch (error: any) {
+      console.error('Get all tasks error:', error);
+      return res.status(500).json({ 
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
 }
 

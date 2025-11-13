@@ -245,7 +245,16 @@ export class ProjectService {
         : `Updated ${recentTask.task_name}`,
       user_email: recentTask.assigned_to || '',
       created_at: (recentTask.completed_at || recentTask.updated_at).toISOString()
-    } : null;
+    } : {
+      id: 0,
+      activity_id: 'none',
+      project_id: projectId,
+      task_id: '',
+      activity_type: 'no_activity',
+      description: 'No recent activity',
+      user_email: '',
+      created_at: new Date().toISOString()
+    };
 
     // Format project data
     const projectData = {

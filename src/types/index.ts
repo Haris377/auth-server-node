@@ -1,22 +1,14 @@
 import { Request } from 'express';
 import { User } from '@prisma/client';
 
-export interface RegisterUserInput {
-  email: string;
-  password: string;
-  firstName?: string;
-  lastName?: string;
-}
-
 export interface RegisterUserPayload {
-  username?: string;
-  name?: string;
+  username: string;
   email: string;
   role?: string;
-  role_id?: string;
+  role_id: string;
   status: string;
   phone?: string;
-  department?: string;
+  department_id?: number;
   location?: string;
 }
 
@@ -31,6 +23,7 @@ export interface AuthenticatedRequest extends Request {
 
 export interface JwtPayload {
   userId: string;
+  roles?: string[];
   iat?: number;
   exp?: number;
 }

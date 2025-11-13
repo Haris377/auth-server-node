@@ -14,6 +14,15 @@ export class UserController {
           id: true,
           username: true,
           email: true,
+          phone: true,
+          department_id: true,
+          department: {
+            select: {
+              id: true,
+              name: true,
+              description: true
+            }
+          },
           created_at: true,
           updated_at: true,
           is_active: true,
@@ -45,6 +54,15 @@ export class UserController {
           id: true,
           username: true,
           email: true,
+          phone: true,
+          department_id: true,
+          department: {
+            select: {
+              id: true,
+              name: true,
+              description: true
+            }
+          },
           created_at: true,
           updated_at: true,
           is_active: true,
@@ -73,7 +91,7 @@ export class UserController {
   async updateUser(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { email, username, status, role_id } = req.body;
+      const { email, username, name, status, role_id, phone, department } = req.body;
       
       console.log('Update user request:', { id, body: req.body });
       
@@ -108,6 +126,27 @@ export class UserController {
       
       if (email !== undefined && email !== null) updateData.email = email;
       if (username !== undefined && username !== null) updateData.username = username;
+      // If name is provided, use it for username
+      if (name !== undefined && name !== null) updateData.username = name;
+      if (phone !== undefined && phone !== null) updateData.phone = phone;
+      
+      // Handle department field - convert to department_id
+      if (department !== undefined && department !== null) {
+        try {
+          // Find department by name using raw query
+          const result = await prisma.$queryRaw`
+            SELECT id FROM departments WHERE name = ${department}
+          `;
+          
+          if (result && Array.isArray(result) && result.length > 0) {
+            updateData.department_id = result[0].id;
+          } else {
+            console.warn(`Department '${department}' not found. Skipping department update.`);
+          }
+        } catch (error) {
+          console.error('Error looking up department:', error);
+        }
+      }
       
       // Handle status field - map to is_active
       if (status !== undefined && status !== null) {
@@ -218,7 +257,7 @@ export class UserController {
           const missingFields: string[] = [];
           
           // Check each field we tried to update
-          const attemptedFields = ['username'];
+          const attemptedFields = ['username', 'phone', 'department_id'];
           attemptedFields.forEach(field => {
             if (updateData[field] !== undefined && errorMessage.toLowerCase().includes(field.toLowerCase())) {
               missingFields.push(field);
@@ -228,6 +267,8 @@ export class UserController {
           // Try to update without the problematic fields - start with basic fields only
           const safeUpdateData: any = {};
           if (email !== undefined && email !== null) safeUpdateData.email = email;
+          if (phone !== undefined && phone !== null) safeUpdateData.phone = phone;
+          if (updateData.department_id !== undefined) safeUpdateData.department_id = updateData.department_id;
           if (status !== undefined && status !== null) {
             safeUpdateData.is_active = typeof status === 'string' ? status.toLowerCase() === 'active' : status === true;
           }

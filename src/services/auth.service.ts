@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { RegisterUserInput, LoginUserInput } from '../types';
+import { LoginUserInput } from '../types';
 import emailService from './email.service';
 import crypto from 'crypto';
 
@@ -12,40 +12,6 @@ dotenv.config();
 const prisma = new PrismaClient();
 
 export class AuthService {
-  async register(userData: RegisterUserInput) {
-    const { email, password } = userData;
-    
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
-    
-    if (existingUser) {
-      throw new Error('User with this email already exists');
-    }
-    
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    
-    // Use email prefix as username if no username provided
-    const username = email.split('@')[0];
-    
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        username,
-        email,
-        password_hash: hashedPassword,
-        is_active: true
-      } as any
-    });
-    
-    // Remove password from response
-    const { password_hash: _, ...userWithoutPassword } = user as any;
-    
-    return userWithoutPassword;
-  }
   
   async login(loginData: LoginUserInput) {
     try {
@@ -168,13 +134,13 @@ export class AuthService {
     };
   }
 
-  async registerUser(registerData: {
+  async register(registerData: {
     username: string;
     email: string;
     role: string;
     status: string;
     phone?: string;
-    department?: string;
+    department_id?: number;
     location?: string;
   }) {
     const { username, email, role, status } = registerData;
@@ -206,12 +172,17 @@ export class AuthService {
     const tempPassword = crypto.randomBytes(32).toString('hex');
     const hashedTempPassword = await bcrypt.hash(tempPassword, 10);
     
+    // Extract department_id and other fields
+    const { department_id, phone, location } = registerData;
+    
     const user = await prisma.user.create({
       data: {
         username,
         email,
         password_hash: hashedTempPassword,
         is_active: status === 'active',
+        phone,
+        department_id,
         roles: {
           create: {
             role_id: userRole.id
