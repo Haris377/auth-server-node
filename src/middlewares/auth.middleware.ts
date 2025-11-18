@@ -36,6 +36,7 @@ export const authenticate = async (
     }
     
     req.user = user;
+    req.userId = decoded.userId;
     next();
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {

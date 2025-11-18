@@ -55,10 +55,10 @@ export class AuthController {
     }
   }
 
-  async register(req: Request, res: Response) {
+  async register(req: AuthenticatedRequest, res: Response) {
     try {
       const payload: RegisterUserPayload = req.body;
-      const { username, email, role, role_id, status, phone, department_id, location } = payload;
+      const { username, email, role, role_id, status, phone, department_id, location, password } = payload;
       
       if (!username || !email || !status) {
         return res.status(400).json({ 
@@ -92,7 +92,9 @@ export class AuthController {
         status,
         phone,
         department_id,
-        location
+        location,
+        password,
+        created_by: req.userId
       });
       
       return res.status(201).json({

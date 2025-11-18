@@ -31,8 +31,11 @@ export class ProjectService {
     }
   }
 
-  async getAllProjects() {
+  async getAllProjects(userId?: string) {
     return prisma.project.findMany({
+      where: userId ? {
+        created_by: userId
+      } as any : undefined,
       orderBy: {
         created_at: 'desc'
       }
@@ -288,6 +291,40 @@ export class ProjectService {
       },
       recent_activity: recent_activity
     };
+  }
+
+  async getAssignedProjects(userId: string) {
+
+    // Get all tasks where assigned_to matches the userId
+    const tasks = await prisma.task.findMany({
+      where: {
+        assigned_to: userId
+      },
+      select: {
+        project_id: true
+      }
+    });
+
+    // Get unique project_ids from tasks
+    const projectIds = [...new Set(tasks.map(task => task.project_id).filter((id): id is string => id !== null && id !== undefined))];
+
+    if (projectIds.length === 0) {
+      return [];
+    }
+
+    // Get all projects with those project_ids
+    const projects = await prisma.project.findMany({
+      where: {
+        project_id: {
+          in: projectIds
+        }
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
+
+    return projects;
   }
 }
 

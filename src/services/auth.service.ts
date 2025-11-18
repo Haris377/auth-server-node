@@ -142,23 +142,29 @@ export class AuthService {
     phone?: string;
     department_id?: number;
     location?: string;
+    password?: string;
+    created_by?: string;
   }) {
-    const { username, email, role, status } = registerData;
+    const { username, email, role, status, password } = registerData;
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    // Check if user already exists by email
+    const existingUserByEmail = await prisma.user.findUnique({
       where: { email }
     });
 
-    if (existingUser) {
+    if (existingUserByEmail) {
       throw new Error('User with this email already exists');
     }
 
-    // Generate email token (stored in memory/cache - not in DB)
-    const emailToken = crypto.randomBytes(32).toString('hex');
-    // Note: Since emailToken columns don't exist in DB, tokens should be handled separately
-    // For now, we'll create the user and send email, but password setup needs different approach
-    
+    // Check if user already exists by username
+    const existingUserByUsername = await prisma.user.findFirst({
+      where: { username }
+    });
+
+    if (existingUserByUsername) {
+      throw new Error('User with this username already exists');
+    }
+
     // Find role by name
     const userRole = await prisma.role.findUnique({
       where: { name: role }
@@ -168,21 +174,29 @@ export class AuthService {
       throw new Error(`Role ${role} not found`);
     }
 
-    // Create user without password (password_hash is required in DB, so we'll set a temporary one)
-    const tempPassword = crypto.randomBytes(32).toString('hex');
-    const hashedTempPassword = await bcrypt.hash(tempPassword, 10);
+    // Handle password hashing
+    let hashedPassword: string;
+    let emailToken: string | null = null;
     
-    // Extract department_id and other fields
-    const { department_id, phone, location } = registerData;
+    if (password && password.trim().length > 0) {
+      const salt = await bcrypt.genSalt(10);
+      hashedPassword = await bcrypt.hash(password.trim(), salt);
+    } else {
+      hashedPassword = '';
+    }
+    
+    const { department_id, phone, location, created_by } = registerData;
     
     const user = await prisma.user.create({
       data: {
         username,
         email,
-        password_hash: hashedTempPassword,
+        password_hash: hashedPassword,
         is_active: status === 'active',
         phone,
         department_id,
+        location,
+        created_by,
         roles: {
           create: {
             role_id: userRole.id
@@ -198,18 +212,20 @@ export class AuthService {
       }
     });
 
-    // Send email with setup link
+    // Handle email notifications
     try {
-      await emailService.sendPasswordSetupEmail(email, username, emailToken);
-      console.log(`✅ Password setup email sent to ${email}`);
+      if (emailToken) {
+        await emailService.sendPasswordSetupEmail(email, username, emailToken);
+        console.log(`✅ Password setup email sent to ${email}`);
+      } else {
+        await emailService.sendWelcomeEmail(email, username);
+        console.log(`✅ Welcome email sent to ${email}`);
+      }
     } catch (error: any) {
-      console.error('❌ Failed to send password setup email:', error.message);
-      // Log detailed error for debugging
+      console.error('❌ Failed to send registration email:', error.message);
       if (error.code) {
         console.error(`   Error code: ${error.code}`);
       }
-      // Note: We continue with user creation even if email fails
-      // This allows manual password setup or retry later
       console.warn(`⚠️  User created but email notification failed. User ID: ${user.id}`);
     }
 
@@ -255,13 +271,13 @@ export class AuthService {
       }
     });
 
-    // Send welcome email
+    // Send confirmation email after password is set
     try {
       const userWithUsername = user as any;
-      await emailService.sendWelcomeEmail(user.email, userWithUsername.username || user.email);
-      console.log(`✅ Welcome email sent to ${user.email}`);
+      await emailService.sendWelcomeEmail(user.email, userWithUsername.username || user.email, true);
+      console.log(`✅ Password confirmation email sent to ${user.email}`);
     } catch (error: any) {
-      console.error('❌ Failed to send welcome email:', error.message);
+      console.error('❌ Failed to send password confirmation email:', error.message);
       if (error.code) {
         console.error(`   Error code: ${error.code}`);
       }

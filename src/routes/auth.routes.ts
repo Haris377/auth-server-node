@@ -77,6 +77,8 @@ const loginValidation = [
  */
 router.post('/register', registerValidation, authController.register);
 
+router.post('/create-user', authenticate, registerValidation, authController.register);
+
 /**
  * @swagger
  * /api/auth/login:

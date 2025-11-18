@@ -10,6 +10,7 @@ export interface RegisterUserPayload {
   phone?: string;
   department_id?: number;
   location?: string;
+  password?: string;
 }
 
 export interface LoginUserInput {
@@ -19,6 +20,7 @@ export interface LoginUserInput {
 
 export interface AuthenticatedRequest extends Request {
   user?: User;
+  userId?: string;
 }
 
 export interface JwtPayload {

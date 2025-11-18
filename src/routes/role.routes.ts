@@ -151,7 +151,7 @@ const roleController = new RoleController();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/', roleController.getAllRoles);
+router.get('/', authenticate, roleController.getAllRoles);
 
 /**
  * @swagger
@@ -249,7 +249,7 @@ router.get('/:id', authenticate, roleController.getRoleById);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/', authenticate, hasPermission('MANAGE_ROLES'), roleController.createRole);
+router.post('/', authenticate, roleController.createRole);
 
 /**
  * @swagger
@@ -311,7 +311,7 @@ router.post('/', authenticate, hasPermission('MANAGE_ROLES'), roleController.cre
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/:id', authenticate, hasPermission('MANAGE_ROLES'), roleController.updateRole);
+router.put('/:id', authenticate, roleController.updateRole);
 
 /**
  * @swagger
@@ -365,7 +365,7 @@ router.put('/:id', authenticate, hasPermission('MANAGE_ROLES'), roleController.u
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete('/:id', authenticate, hasPermission('MANAGE_ROLES'), roleController.deleteRole);
+router.delete('/:id', authenticate, roleController.deleteRole);
 
 // Role-Permission routes
 /**

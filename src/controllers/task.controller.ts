@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { TaskService } from '../services/task.service';
+import { AuthenticatedRequest } from '../types';
 
 const taskService = new TaskService();
 
@@ -136,8 +137,12 @@ export class TaskController {
     }
   }
 
-  async getAllTasks(req: Request, res: Response) {
+  async getAllTasks(req: AuthenticatedRequest, res: Response) {
     try {
+      if (!req.userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
       console.log('GET /api/tasks/get-tasks called');
       console.log('Query params:', req.query);
       
@@ -152,12 +157,39 @@ export class TaskController {
         console.log('Fetching all tasks');
       }
       
-      const result = await taskService.getAllTasks(projectId);
+      const result = await taskService.getAllTasks(projectId, req.userId);
       console.log('Tasks found:', result.tasks.length);
       
       return res.status(200).json(result);
     } catch (error: any) {
       console.error('Get all tasks error:', error);
+      return res.status(500).json({ 
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  async getAssignedTasks(req: AuthenticatedRequest, res: Response) {
+    try {
+      // Get user_id from query parameter or from authenticated user
+      const userId = (req.query.user_id as string) || req.userId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'user_id is required' });
+      }
+      
+      const tasks = await taskService.getAssignedTasks(userId);
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Assigned tasks retrieved successfully',
+        data: tasks,
+        count: tasks.length
+      });
+    } catch (error: any) {
+      console.error('Get assigned tasks error:', error);
       return res.status(500).json({ 
         success: false,
         message: 'Internal server error',

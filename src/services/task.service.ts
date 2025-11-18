@@ -86,9 +86,15 @@ export class TaskService {
     });
   }
 
-  async getAllTasks(projectId?: string) {
-    // Get all tasks, optionally filtered by project
-    const where = projectId ? { project_id: projectId } : {};
+  async getAllTasks(projectId?: string, userId?: string) {
+    // Get all tasks, optionally filtered by project and created_by
+    const where: any = {};
+    if (projectId) {
+      where.project_id = projectId;
+    }
+    if (userId) {
+      where.created_by = userId;
+    }
     
     const tasks = await prisma.task.findMany({
       where,
@@ -181,6 +187,30 @@ export class TaskService {
       },
       tasks: enhancedTasks
     };
+  }
+
+  async getAssignedTasks(userId: string) {
+    // Get all tasks where assigned_to matches the userId
+    const tasks = await prisma.task.findMany({
+      where: {
+        assigned_to: userId
+      },
+      include: {
+        project: {
+          select: {
+            project_id: true,
+            project_name: true,
+            status: true,
+            project_manager: true
+          }
+        }
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
+
+    return tasks;
   }
 }
 

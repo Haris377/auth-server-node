@@ -53,8 +53,13 @@ export class RoleController {
         message: 'Role created successfully',
         data: role
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Create role error:', error);
+      
+      if (error.code === 'P2002') {
+        return res.status(409).json({ message: 'Role name already exists' });
+      }
+      
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -64,14 +69,29 @@ export class RoleController {
       const { id } = req.params;
       const { name, description } = req.body;
       
+      // Check if role exists
+      const existingRole = await roleService.getRoleById(id);
+      if (!existingRole) {
+        return res.status(404).json({ message: 'Role not found' });
+      }
+      
       const role = await roleService.updateRole(id, name, description);
       
       return res.status(200).json({
         message: 'Role updated successfully',
         data: role
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Update role error:', error);
+      
+      if (error.code === 'P2025') {
+        return res.status(404).json({ message: 'Role not found' });
+      }
+      
+      if (error.code === 'P2002') {
+        return res.status(409).json({ message: 'Role name already exists' });
+      }
+      
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -80,13 +100,28 @@ export class RoleController {
     try {
       const { id } = req.params;
       
+      // Check if role exists
+      const existingRole = await roleService.getRoleById(id);
+      if (!existingRole) {
+        return res.status(404).json({ message: 'Role not found' });
+      }
+      
       await roleService.deleteRole(id);
       
       return res.status(200).json({
         message: 'Role deleted successfully'
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete role error:', error);
+      
+      if (error.code === 'P2025') {
+        return res.status(404).json({ message: 'Role not found' });
+      }
+      
+      if (error.code === 'P2003') {
+        return res.status(409).json({ message: 'Cannot delete role: it is being used by users or has assigned permissions' });
+      }
+      
       return res.status(500).json({ message: 'Internal server error' });
     }
   }

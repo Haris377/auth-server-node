@@ -176,6 +176,64 @@ router.get('/get-tasks', authenticate, taskController.getAllTasks);
 
 /**
  * @swagger
+ * /api/tasks/assigned:
+ *   get:
+ *     summary: Get assigned tasks for a user
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: user_id
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: User ID to get assigned tasks (optional - uses authenticated user if not provided)
+ *     responses:
+ *       200:
+ *         description: Assigned tasks retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Assigned tasks retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Task'
+ *                 count:
+ *                   type: integer
+ *                   description: Number of tasks found
+ *       400:
+ *         description: Bad request - user_id is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/assigned', authenticate, taskController.getAssignedTasks);
+
+/**
+ * @swagger
  * /api/tasks/{id}:
  *   get:
  *     summary: Get task by ID

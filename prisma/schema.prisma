@@ -17,8 +17,14 @@ model User {
   department_id Int?
   created_at    DateTime   @default(now())  @map("created_at")
   updated_at    DateTime   @updatedAt  @map("updated_at")
+  created_by    String?    @map("created_by")
+  updated_by    String?    @map("updated_by")
   roles         UserRole[]
   department    Department? @relation(fields: [department_id], references: [id])
+  creator       User?      @relation("UserCreatedBy", fields: [created_by], references: [id])
+  updater       User?      @relation("UserUpdatedBy", fields: [updated_by], references: [id])
+  createdUsers  User[]     @relation("UserCreatedBy")
+  updatedUsers  User[]     @relation("UserUpdatedBy")
 
   @@map("users")
 }
@@ -83,7 +89,10 @@ model Project {
   created_at          DateTime  @default(now()) @map("created_at")
   updated_at          DateTime  @updatedAt @map("updated_at")
   completion_percentage Int?    @default(0) @map("completion_percentage")
+  created_by          String?   @map("created_by")
+  updated_by          String?   @map("updated_by")
   tasks               Task[]
+  team_members        ProjectTeamMember[]
 
   @@map("projects")
 }
@@ -104,6 +113,8 @@ model Task {
   created_at       DateTime  @default(now()) @map("created_at")
   updated_at       DateTime  @updatedAt @map("updated_at")
   completed_at     DateTime? @map("completed_at")
+  created_by       String?   @map("created_by")
+  updated_by       String?   @map("updated_by")
   project          Project?  @relation(fields: [project_id], references: [project_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("tasks")
@@ -118,4 +129,28 @@ model Department {
   users       User[]
 
   @@map("departments")
+}
+
+model ProjectTeamMember {
+  id           Int      @id @default(autoincrement())
+  project_id   String?  @db.VarChar(255) @map("project_id")
+  member_email String?  @db.VarChar(255) @map("member_email")
+  role         String?  @db.VarChar(100)
+  added_at     DateTime @default(now()) @map("added_at")
+  project      Project? @relation(fields: [project_id], references: [project_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("project_team_members")
+}
+
+model ActivityLog {
+  id           Int      @id @default(autoincrement())
+  activity_id  String?  @db.VarChar(255) @map("activity_id")
+  project_id   String?  @db.VarChar(255) @map("project_id")
+  task_id      String?  @db.VarChar(255) @map("task_id")
+  activity_type String? @db.VarChar(100) @map("activity_type")
+  description  String?  @db.Text
+  user_email   String?  @db.VarChar(255) @map("user_email")
+  created_at   DateTime @default(now()) @map("created_at")
+
+  @@map("activity_logs")
 }

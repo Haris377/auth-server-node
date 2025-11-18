@@ -133,6 +133,14 @@ const projectController = new ProjectController();
  *     tags: [Projects]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: user_id
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: User ID to filter projects (optional - uses authenticated user if not provided)
  *     responses:
  *       200:
  *         description: Projects retrieved successfully
@@ -154,6 +162,64 @@ const projectController = new ProjectController();
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/', authenticate, projectController.getAllProjects);
+
+/**
+ * @swagger
+ * /api/projects/assigned:
+ *   get:
+ *     summary: Get assigned projects for a user
+ *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: user_id
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: User ID to get assigned projects (optional - uses authenticated user if not provided)
+ *     responses:
+ *       200:
+ *         description: Assigned projects retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Assigned projects retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Project'
+ *       400:
+ *         description: Bad request - user_id is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/assigned', authenticate, projectController.getAssignedProjects);
 
 /**
  * @swagger

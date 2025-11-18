@@ -7,9 +7,18 @@ import { hasPermission } from '../middlewares/permission.middleware';
 const prisma = new PrismaClient();
 
 export class UserController {
-  async getAllUsers(req: Request, res: Response) {
+  async getAllUsers(req: AuthenticatedRequest, res: Response) {
     try {
+      // Ensure user is authenticated
+      if (!req.userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      // Filter users by created_by - only show users created by the current logged-in user
       const users = await prisma.user.findMany({
+        where: {
+          created_by: req.userId
+        } as any,
         select: {
           id: true,
           username: true,
@@ -88,7 +97,7 @@ export class UserController {
     }
   }
 
-  async updateUser(req: Request, res: Response) {
+  async updateUser(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       const { email, username, name, status, role_id, phone, department } = req.body;
@@ -120,6 +129,11 @@ export class UserController {
       
       // Prepare update data - only include fields that are actually provided
       const updateData: any = {};
+      
+      // Set updated_by from request userId (set by middleware)
+      if (req.userId) {
+        updateData.updated_by = req.userId;
+      }
       
       // Remove id from body if present (should only be in URL)
       const { id: bodyId, ...bodyWithoutId } = req.body;

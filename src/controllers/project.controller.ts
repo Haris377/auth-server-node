@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { ProjectService } from '../services/project.service';
+import { AuthenticatedRequest } from '../types';
 
 const projectService = new ProjectService();
 
@@ -63,9 +64,16 @@ export class ProjectController {
     }
   }
 
-  async getAllProjects(req: Request, res: Response) {
+  async getAllProjects(req: AuthenticatedRequest, res: Response) {
     try {
-      const projects = await projectService.getAllProjects();
+      // Get user_id from query parameter or from authenticated user
+      const userId = (req.query.user_id as string) || req.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized - user_id is required' });
+      }
+      
+      const projects = await projectService.getAllProjects(userId);
       
       return res.status(200).json({
         message: 'Projects retrieved successfully',
@@ -160,6 +168,35 @@ export class ProjectController {
       
       return res.status(500).json({ 
         success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  async getAssignedProjects(req: AuthenticatedRequest, res: Response) {
+    try {
+      // Get user_id from query parameter or from authenticated user
+      const userId = (req.query.user_id as string) || req.userId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'user_id is required' });
+      }
+      
+      const projects = await projectService.getAssignedProjects(userId);
+      
+      return res.status(200).json({
+        message: 'Assigned projects retrieved successfully',
+        data: projects
+      });
+    } catch (error: any) {
+      console.error('Get assigned projects error:', error);
+      
+      if (error.message === 'User not found') {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      return res.status(500).json({ 
         message: 'Internal server error',
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
