@@ -311,4 +311,21 @@ export class AuthService {
 
     return role;
   }
+
+  async forgotPassword(email: string){
+    const user = await prisma.user.findUnique({
+      where: { email: email }
+    });
+
+    if (!user) {
+      throw new Error(`User with ${email} not found`);
+    }
+
+    try {
+    await emailService.sendForgotPassword(email);
+    console.log(`✅ Email sent to ${user.email}`);
+    }catch(error: any){
+      console.error('❌ Failed to send email:', error.message);
+    }
+  }
 }

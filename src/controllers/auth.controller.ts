@@ -166,4 +166,19 @@ export class AuthController {
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
+
+  async forgotPassword(req: Request, res: Response){
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ 
+        message: 'Email is required' 
+      });
+    }
+
+    const response = await authService.forgotPassword(email);
+    return res.status(200).json({
+      message: 'Email send successfully!',
+    });
+  }
 }

@@ -219,4 +219,6 @@ router.get('/profile', authenticate, authController.getProfile);
  */
 router.post('/set-password', authController.setPassword);
 
+router.post('/forgot-password', authController.forgotPassword);
+
 export default router;

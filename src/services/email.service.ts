@@ -12,28 +12,26 @@ class EmailService {
   constructor() {
     // Use the specific email configuration
     const emailConfig = {
-      emailaddressFrom: "rasadrahimkhan@gmail.com",
-      emailaddress: "asadkhaaa@gmail.com",
-      password: "nezjhrkwgridjsvv",
+      emailaddressFrom: "contact@cykube.com",
+      emailaddress: "contact@cykube.com",
+      password: "Cloud54321%",
       localport: "587",
-      localSMTPIP: "smtp.gmail.com",
+      localSMTPIP: "smtp.hostinger.com",
       ServerIP: "10.228.41.10",
-      SenderEmailAddress: "rasadrahimkhan@gmail.com",
-      SMTPIP: "smtp.ipage.com",
+      SenderEmailAddress: "contact@cykube.com",
+      SMTPIP: "smtp.hostinger.com",
       SMTPPort: 587,
       EnableSSL: true,
-      AllowAnonymous: false,
-      RedirectSignUpUrl: "http://103.79.16.18:6062/Account/SignUp?role=PARTNER"
+      AllowAnonymous: false
     };
 
     
-    
+
     // Set configuration status
     this.isConfigured = true;
 
-    // Use Gmail SMTP since the email address is a Gmail account
     this.transporter = nodemailer.createTransport({
-      host: emailConfig.localSMTPIP || 'smtp.gmail.com', // Use Gmail SMTP for Gmail accounts
+      host: emailConfig.localSMTPIP || 'smtp.hostinger.com',
       port: parseInt(emailConfig.localport) || 587,
       secure: false, // Port 587 uses STARTTLS, not direct SSL
       requireTLS: true, // Enable TLS/SSL via STARTTLS
@@ -66,7 +64,7 @@ class EmailService {
     } catch (error: any) {
       console.error('❌ Email service verification failed:', error.message);
       if (error.code === 'EAUTH') {
-        console.error('   → Authentication failed. Check your email credentials for smtp.gmail.com.');
+        console.error('   → Authentication failed. Check your email credentials for smtp.hostinger.com.');
       }
       throw error;
     }
@@ -81,12 +79,12 @@ class EmailService {
 
     const appUrl = appConfig.getCurrentAppUrl();
     const setupLink = `${appUrl}/set-password?token=${token}`;
-    const emailFrom = 'rasadrahimkhan@gmail.com';
+    const emailFrom = "contact@cykube.com";
 
     const mailOptions = {
       from: `"Auth Server" <${emailFrom}>`,
       to: email,
-      subject: 'Set Your Password - Auth Server',
+      subject: 'Set Your Password',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">Welcome to Auth Server!</h2>
@@ -114,9 +112,9 @@ class EmailService {
     } catch (error: any) {
       console.error('❌ Error sending password setup email:', error.message);
       if (error.code === 'EAUTH') {
-        console.error('   → Authentication failed. Check email credentials for smtp.gmail.com.');
+        console.error('   → Authentication failed. Check email credentials for smtp.hostinger.com.');
       } else if (error.code === 'ECONNECTION') {
-        console.error('   → Connection failed. Check network and SMTP settings for smtp.gmail.com.');
+        console.error('   → Connection failed. Check network and SMTP settings for smtp.hostinger.com.');
       }
       throw error;
     }
@@ -130,7 +128,7 @@ class EmailService {
     }
 
     const appUrl = appConfig.getCurrentAppUrl();
-    const emailFrom = 'rasadrahimkhan@gmail.com';
+    const emailFrom = 'contact@cykube.com';
     
     let mailOptions;
     
@@ -184,12 +182,46 @@ class EmailService {
     } catch (error: any) {
       console.error('❌ Error sending welcome email:', error.message);
       if (error.code === 'EAUTH') {
-        console.error('   → Authentication failed. Check email credentials for smtp.gmail.com.');
+        console.error('   → Authentication failed. Check email credentials for smtp.hostinger.com.');
       } else if (error.code === 'ECONNECTION') {
-        console.error('   → Connection failed. Check network and SMTP settings for smtp.gmail.com.');
+        console.error('   → Connection failed. Check network and SMTP settings for smtp.hostinger.com.');
       }
       throw error;
     }
+  }
+
+  async sendForgotPassword(email: string){
+    const emailFrom = 'contact@cykube.com';
+    const appUrl = appConfig.getCurrentAppUrl();
+    const resetPasswordLink = `${appUrl}/set-password?email=${encodeURIComponent(email)}`;
+    let mailOptions = {
+      from: `<${emailFrom}>`,
+      to: email,
+      subject: 'Reset Your Password',
+      html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">Reset Your Password</h2>
+            <p>We received a request to reset your Workpulse account password.</p>
+            <p>If you made this request, click the button below to reset your password.</p>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetPasswordLink}" 
+                style="background-color: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Reset Password
+              </a>
+            </div>
+
+            <p style="color: #666; font-size: 14px;">Or copy and paste this link into your browser:</p>
+            <p style="color: #666; font-size: 12px; word-break: break-all;">${resetPasswordLink}</p>
+
+            <p style="color: #999; font-size: 12px; margin-top: 30px;">
+              If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.
+            </p>
+          </div>
+        `
+    };
+    await this.transporter.sendMail(mailOptions);
+    return true;
   }
 }
 

@@ -151,7 +151,7 @@ const roleController = new RoleController();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/', authenticate, roleController.getAllRoles);
+router.get('/', roleController.getAllRoles);
 
 /**
  * @swagger
